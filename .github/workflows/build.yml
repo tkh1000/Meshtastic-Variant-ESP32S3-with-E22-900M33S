@@ -1,0 +1,78 @@
+name: Build Meshtastic Firmware
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+
+      - name: Checkout this repo
+        uses: actions/checkout@v4
+
+      - name: Checkout Meshtastic firmware
+        uses: actions/checkout@v4
+        with:
+          repository: meshtastic/firmware
+          ref: v2.7.15.567b8ea
+          submodules: recursive
+          fetch-depth: 0
+          path: firmware
+
+      - name: Cache PlatformIO
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.platformio
+            firmware/.pio
+          key: pio-${{ runner.os }}-${{ hashFiles('firmware/platformio.ini') }}
+          restore-keys: pio-${{ runner.os }}-
+
+      - name: Install PlatformIO
+        run: pip install platformio
+
+      - name: Find and patch variant.h
+        run: |
+          VARIANT=$(find firmware/variants -name "variant.h" | grep -i "seeed.xiao.s3" | head -1)
+          echo "Patching: $VARIANT"
+          python3 patch_variant.py "$VARIANT"
+          cat "$VARIANT"
+
+      - name: Build firmware
+        working-directory: firmware
+        run: pio run -e seeed-xiao-s3
+
+      - name: List build outputs
+        run: find firmware/.pio/build/seeed-xiao-s3 -name "*.bin" | sort
+
+      - name: Copy binaries
+        run: |
+          mkdir -p package
+          BUILD="firmware/.pio/build/seeed-xiao-s3"
+          cp "$BUILD/bootloader.bin" package/bootloader.bin
+          cp "$BUILD/partitions.bin" package/partitions.bin
+          FW=$(find "$BUILD" -name "firmware.bin" | head -1)
+          if [ -z "$FW" ]; then
+            FW=$(find "$BUILD" -name "*.bin" ! -name "bootloader.bin" ! -name "partitions.bin" | head -1)
+          fi
+          echo "Firmware binary: $FW"
+          cp "$FW" package/firmware.bin
+
+      - name: Write manifest
+        run: |
+          echo '{"name":"Meshtastic","version":"2.7.15","new_install_prompt_erase":true,"builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"bootloader.bin","offset":0},{"path":"partitions.bin","offset":32768},{"path":"firmware.bin","offset":65536}]}]}' > package/manifest.json
+          cat package/manifest.json
+
+      - name: Zip package
+        working-directory: package
+        run: zip ../meshtastic-xiao-wio-sx1262.zip bootloader.bin partitions.bin firmware.bin manifest.json
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: meshtastic-xiao-wio-sx1262
+          path: meshtastic-xiao-wio-sx1262.zip
+          retention-days: 30
