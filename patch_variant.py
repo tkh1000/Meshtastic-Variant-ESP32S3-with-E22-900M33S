@@ -55,6 +55,7 @@ PIN_BLOCK = """
 #define PIN_SPI_SS       5
 #define HAS_GPS          0
 #define HAS_WIRE         0
+#define MAX_POWER_DBM 33
 """
 
 def patch_header(path):
