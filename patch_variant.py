@@ -34,6 +34,7 @@ PIN_BLOCK = """
 #undef I2C_SDA
 #undef I2C_SCL
 #undef HAS_WIRE
+#undef MAX_POWER_DBM
 
 #define USE_SX1262
 #define LORA_MOSI        9
@@ -55,7 +56,7 @@ PIN_BLOCK = """
 #define PIN_SPI_SS       5
 #define HAS_GPS          0
 #define HAS_WIRE         0
-#define MAX_POWER_DBM 33
+#define MAX_POWER_DBM    22
 """
 
 def patch_header(path):
