@@ -47,8 +47,14 @@ PIN_BLOCK = """
 #define SX126X_DIO1      2
 #define SX126X_BUSY      4
 #define SX126X_RESET     3
-#define SX126X_RXEN      6
-#define SX126X_TXEN      1
+
+
+#define SX126X_DIO2_AS_RF_SWITCH
+#define SX126X_RXEN      RADIOLIB_NC
+#define SX126X_TXEN      RADIOLIB_NC
+
+
+
 #define SX126X_DIO3_TCXO_VOLTAGE 1.8
 #define PIN_SPI_MOSI     9
 #define PIN_SPI_MISO     8
@@ -56,7 +62,7 @@ PIN_BLOCK = """
 #define PIN_SPI_SS       5
 #define HAS_GPS          0
 #define HAS_WIRE         0
-#define MAX_POWER_DBM    32
+#define MAX_POWER_DBM    33
 """
 
 def patch_header(path):
