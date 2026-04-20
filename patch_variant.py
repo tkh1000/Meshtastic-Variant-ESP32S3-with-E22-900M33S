@@ -63,6 +63,7 @@ PIN_BLOCK = """
 #define HAS_GPS          0
 #define HAS_WIRE         0
 #define MAX_POWER_DBM    33
+#define LORA_TX_POWER 33
 """
 
 def patch_header(path):
