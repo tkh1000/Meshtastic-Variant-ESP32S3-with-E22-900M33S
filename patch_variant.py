@@ -96,3 +96,21 @@ for ini_file in firmware_dir.rglob("*.ini"):
         for line in text.splitlines():
             if any(x in line for x in ["LORA_", "SX126X_", "seeed", "xiao"]):
                 print("  >>", line)
+
+
+# Patch UNSET region power limit in RadioInterface.cpp
+radio_interface = firmware_dir / "src" / "mesh" / "RadioInterface.cpp"
+if radio_interface.exists():
+    text = radio_interface.read_text()
+    patched = re.sub(
+        r'(RDEF\(UNSET,\s*902\.0f,\s*928\.0f,\s*100,\s*)30(\s*,)',
+        r'\g<1>33\2',
+        text
+    )
+    if patched != text:
+        radio_interface.write_text(patched)
+        print("Patched RadioInterface.cpp UNSET region power limit to 33")
+    else:
+        print("WARNING: UNSET region pattern not found in RadioInterface.cpp")
+else:
+    print("RadioInterface.cpp not found at", radio_interface)
